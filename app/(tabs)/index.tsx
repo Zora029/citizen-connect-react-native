@@ -1,70 +1,264 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { useEffect, useState, Fragment } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+} from "react-native";
+import { createShimmerPlaceholder } from "react-native-shimmer-placeholder";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { Tabs } from "expo-router/tabs";
+import { Ionicons } from "@expo/vector-icons";
+import { Link } from "expo-router";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { Colors, Sizes } from "@/constants/Theme";
+import { CATEGORIES, SERVICES } from "@/constants/Mocks";
 
-export default function HomeScreen() {
+const ShimmerPlaceholder = createShimmerPlaceholder();
+
+const Page = () => {
+  const categories = CATEGORIES;
+  const services = SERVICES;
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(categories[0]);
+
+  useEffect(() => {
+    setLoading(true);
+
+    setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+  }, []);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <Tabs.Screen
+        options={{
+          headerLeft: () => (
+            <Image
+              source={require("@/assets/images/app-logo.png")}
+              style={styles.logo}
+            />
+          ),
+          headerRight: () => (
+            <TouchableOpacity style={{ marginRight: 16 }}>
+              <Ionicons
+                name="notifications-outline"
+                size={24}
+                color={Colors.grey}
+              />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          gap: 8,
+          paddingHorizontal: 16,
+          paddingVertical: 10,
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        {categories.map((category, index) => (
+          <TouchableOpacity
+            key={index}
+            onPress={() => {
+              setSelected(category);
+            }}
+          >
+            <Text
+              style={
+                selected === category
+                  ? styles.categoryBtnTextSelected
+                  : styles.categoryBtnText
+              }
+            >
+              {category.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+      <ScrollView>
+        {categories.map((category, index) => (
+          <Fragment key={index}>
+            {selected === category && (
+              <Animated.View
+                style={styles.category}
+                entering={FadeIn.duration(600).delay(400)}
+                exiting={FadeOut.duration(400)}
+              >
+                <ShimmerPlaceholder width={160} height={20} visible={!loading}>
+                  <Text style={styles.title}>{selected.name}</Text>
+                </ShimmerPlaceholder>
+                <ShimmerPlaceholder
+                  width={280}
+                  height={20}
+                  visible={!loading}
+                  shimmerStyle={{ marginVertical: 10 }}
+                >
+                  <Text style={styles.label}>{selected.description}</Text>
+                </ShimmerPlaceholder>
+
+                {services.map(
+                  (
+                    { name, description, category_name, duration, total_cost },
+                    index
+                  ) => (
+                    <Link key={index} href={`/service/${index}`} asChild>
+                      <TouchableOpacity activeOpacity={0.7} style={styles.card}>
+                        <View style={{ flexShrink: 1, gap: 4 }}>
+                          <ShimmerPlaceholder
+                            width={160}
+                            height={20}
+                            visible={!loading}
+                          >
+                            <Text style={styles.cardTitle}>{name}</Text>
+                          </ShimmerPlaceholder>
+
+                          <ShimmerPlaceholder
+                            width={160}
+                            height={20}
+                            visible={!loading}
+                          >
+                            <Text style={styles.cardDesc}>{description}</Text>
+                          </ShimmerPlaceholder>
+
+                          <ShimmerPlaceholder
+                            width={250}
+                            height={20}
+                            visible={!loading}
+                          >
+                            <View
+                              style={{
+                                display: "flex",
+                                flexDirection: "row",
+                                gap: 10,
+                              }}
+                            >
+                              <Text style={styles.cardCategory}>
+                                {category_name}
+                              </Text>
+                              {total_cost && (
+                                <Text style={styles.cardCategory}>
+                                  {total_cost} Ar
+                                </Text>
+                              )}
+                              {duration && (
+                                <Text style={styles.cardCategory}>
+                                  {duration}
+                                </Text>
+                              )}
+                            </View>
+                          </ShimmerPlaceholder>
+                        </View>
+                        <ShimmerPlaceholder
+                          width={20}
+                          height={20}
+                          shimmerStyle={{ borderRadius: 30 }}
+                          visible={!loading}
+                        >
+                          <Ionicons
+                            name={"chevron-forward"}
+                            size={18}
+                            color={Colors.icon}
+                          />
+                        </ShimmerPlaceholder>
+                      </TouchableOpacity>
+                    </Link>
+                  )
+                )}
+              </Animated.View>
+            )}
+          </Fragment>
+        ))}
+      </ScrollView>
+    </View>
   );
-}
+};
+
+export default Page;
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: Colors.light,
   },
-  stepContainer: {
-    gap: 8,
+  category: {
+    padding: 16,
+  },
+  logo: {
+    height: 80,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  label: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 16,
+  },
+  categoryBtnText: {
+    color: "#000",
+    fontWeight: "500",
+    backgroundColor: Colors.card,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  categoryBtnTextSelected: {
+    backgroundColor: Colors.grey,
+    color: "#fff",
+    fontWeight: "500",
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  card: {
+    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 16,
+    paddingHorizontal: Sizes.sm,
+    paddingVertical: Sizes.padding,
+    backgroundColor: Colors.card,
+    borderRadius: Sizes.cardRadius,
+    padding: Sizes.cardPadding,
+    shadowColor: Colors.shadow,
+    shadowOffset: {
+      width: Sizes.shadowOffsetWidth,
+      height: Sizes.shadowOffsetHeight,
+    },
+    shadowOpacity: Sizes.shadowOpacity,
+    shadowRadius: Sizes.shadowRadius,
+    elevation: Sizes.elevation,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  cardDesc: {
+    fontSize: 14,
+    color: "#000",
+    marginBottom: 10,
+  },
+  cardCategory: {
+    fontSize: 14,
+    backgroundColor: Colors.primary,
+    color: "#fff",
+    fontWeight: "500",
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  cardCost: {
+    fontSize: 14,
   },
 });
